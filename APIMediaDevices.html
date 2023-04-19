@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grabación de pantalla</title>
+  </head>
+  
+   <!--! CSS -->
+   <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    button {
+      background-color: #4caf50;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      display: block;
+      font-size: 18px;
+      margin: 0 auto 20px;
+      padding: 10px 20px;
+      text-align: center;
+      transition: background-color 0.3s ease;
+      width: 200px;
+    }
+
+    button:hover {
+      background-color: #3e8e41;
+    }
+
+    video {
+      border: 1px solid #ddd;
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+    #record-btn {
+      background-color: green;
+      color: white;
+    }
+    #record-btn.recording {
+      background-color: red;
+    }
+  </style>
+
+
+  <body>
+    <!--! HTML -->
+    <button id="record-btn">Iniciar grabación</button>
+    <video id="screen-capture" width="640" height="360" autoplay></video>
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+    
+    
+    <!--! JavaScript -->
+    <script>
+      const recordBtn = document.getElementById("record-btn");
+      const video = document.getElementById("screen-capture");
+
+      let recorder;
+      let recording = false;
+
+      recordBtn.addEventListener("click", () => {
+        if (!recording) {
+          const displayMediaOptions = {
+            video: {
+              cursor: "always",
+            },
+            audio: false,
+          };
+
+          navigator.mediaDevices
+            .getDisplayMedia(displayMediaOptions)
+            .then((stream) => {
+              video.srcObject = stream;
+              recordBtn.textContent = "Detener grabación";
+              recordBtn.classList.add("recording");
+
+              recorder = RecordRTC(stream, {
+                type: "video",
+              });
+              recorder.startRecording();
+              recording = true;
+            });
+        } else {
+          recorder.stopRecording(() => {
+            const blob = recorder.getBlob();
+            const url = URL.createObjectURL(blob);
+
+            const dateTime = new Date();
+            const dateStr = dateTime.toLocaleDateString().replace(/\//g, "-");
+            const timeStr = dateTime.toLocaleTimeString().replace(/:/g, ".");
+            const filename = `${dateStr}_${timeStr}.webm`;
+
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            recordBtn.textContent = "Iniciar grabación";
+            recordBtn.classList.remove("recording");
+            recording = false;
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
